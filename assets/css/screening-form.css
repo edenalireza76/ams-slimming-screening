@@ -1,0 +1,416 @@
+.amsf-root {
+    --amsf-primary: #1F50AD;
+    --amsf-accent: #FFB617;
+    --amsf-text: #2D3748;
+    --amsf-bg: #FFFFFF;
+    --amsf-error: #D32F2F;
+    --amsf-success: #2E7D32;
+    --amsf-radius: 10px;
+    --amsf-transition: 0.2s ease-in-out;
+
+    direction: rtl;
+    text-align: right;
+    box-sizing: border-box;
+    font-family: inherit;
+    color: var(--amsf-text);
+    line-height: 1.6;
+}
+
+.amsf-root *,
+.amsf-root *::before,
+.amsf-root *::after {
+    box-sizing: inherit;
+}
+
+.amsf-screen-reader-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.amsf-form {
+    background-color: var(--amsf-bg);
+    border: 1px solid #E2E8F0;
+    border-radius: var(--amsf-radius);
+    padding: 28px 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+/* Progress Bar */
+.amsf-progress-wrap {
+    margin-bottom: 24px;
+}
+
+.amsf-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--amsf-text);
+}
+
+.amsf-progress-track {
+    height: 8px;
+    background-color: #E2E8F0;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.amsf-progress-bar {
+    height: 100%;
+    background-color: var(--amsf-primary);
+    transition: width var(--amsf-transition);
+}
+
+.amsf-step-circles {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    gap: 6px;
+}
+
+.amsf-step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #EDF2F7;
+    color: #4A5568;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all var(--amsf-transition);
+}
+
+.amsf-step-circle.is-active {
+    background-color: var(--amsf-accent);
+    color: #1A202C;
+    box-shadow: 0 0 0 3px rgba(255, 182, 23, 0.25);
+}
+
+.amsf-step-circle.is-completed {
+    background-color: var(--amsf-primary);
+    color: #FFFFFF;
+}
+
+/* Steps */
+.amsf-step-pane {
+    display: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.amsf-step-pane.is-visible {
+    display: block;
+    animation: amsfFade 0.25s ease-out;
+}
+
+@keyframes amsfFade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .amsf-step-pane.is-visible,
+    .amsf-progress-bar {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.amsf-step-header {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #EDF2F7;
+}
+
+.amsf-step-title {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    color: var(--amsf-primary);
+}
+
+.amsf-step-desc {
+    font-size: 14px;
+    color: #4A5568;
+    margin: 0;
+}
+
+/* Fields */
+.amsf-fields-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.amsf-field-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.amsf-label {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--amsf-text);
+}
+
+.amsf-req-star {
+    color: var(--amsf-error);
+    margin-right: 4px;
+}
+
+.amsf-input,
+.amsf-textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 1.5px solid #CBD5E0;
+    border-radius: var(--amsf-radius);
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--amsf-text);
+    background-color: #FFFFFF;
+    transition: border-color var(--amsf-transition);
+}
+
+.amsf-input:focus,
+.amsf-textarea:focus {
+    border-color: var(--amsf-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(31, 80, 173, 0.15);
+}
+
+.amsf-field-group.has-error .amsf-input,
+.amsf-field-group.has-error .amsf-textarea,
+.amsf-field-group.has-error .amsf-checkbox-card,
+.amsf-field-group.has-error .amsf-radio-card,
+.amsf-field-group.has-error .amsf-toggle-text {
+    border-color: var(--amsf-error);
+}
+
+.amsf-field-error {
+    color: var(--amsf-error);
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 6px;
+    min-height: 18px;
+}
+
+/* Radio & Checkbox Cards */
+.amsf-radio-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.amsf-checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 576px) {
+    .amsf-checkbox-group {
+        grid-template-columns: 1fr;
+    }
+}
+
+.amsf-radio-card,
+.amsf-checkbox-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 1.5px solid #CBD5E0;
+    border-radius: var(--amsf-radius);
+    background-color: #FFFFFF;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all var(--amsf-transition);
+}
+
+.amsf-radio-card:hover,
+.amsf-checkbox-card:hover {
+    border-color: var(--amsf-primary);
+}
+
+.amsf-radio-card.is-selected,
+.amsf-checkbox-card.is-selected {
+    border-color: var(--amsf-primary);
+    background-color: #EFF6FF;
+    color: var(--amsf-primary);
+    font-weight: 700;
+}
+
+.amsf-radio-input,
+.amsf-checkbox-input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--amsf-primary);
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Toggle Yes/No */
+.amsf-toggle-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.amsf-toggle-btn {
+    position: relative;
+    cursor: pointer;
+    margin: 0;
+}
+
+.amsf-toggle-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.amsf-toggle-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 10px 16px;
+    border: 1.5px solid #CBD5E0;
+    border-radius: var(--amsf-radius);
+    background-color: #FFFFFF;
+    color: var(--amsf-text);
+    font-size: 15px;
+    font-weight: 600;
+    transition: all var(--amsf-transition);
+}
+
+.amsf-toggle-input:checked + .amsf-toggle-text {
+    background-color: var(--amsf-primary);
+    border-color: var(--amsf-primary);
+    color: #FFFFFF;
+}
+
+/* Navigation Buttons */
+.amsf-navigation-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid #EDF2F7;
+}
+
+.amsf-btn {
+    min-height: 48px;
+    padding: 12px 28px;
+    border-radius: var(--amsf-radius);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--amsf-transition);
+}
+
+.amsf-btn-prev {
+    background-color: #EDF2F7;
+    color: #2D3748;
+}
+
+.amsf-btn-next {
+    background-color: var(--amsf-primary);
+    color: #FFFFFF;
+    margin-right: auto;
+}
+
+.amsf-btn-submit {
+    background-color: var(--amsf-accent);
+    color: #1A202C;
+    margin-right: auto;
+}
+
+.amsf-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Result Screens */
+.amsf-result-card {
+    padding: 24px;
+    border-radius: var(--amsf-radius);
+    border: 1.5px solid transparent;
+}
+
+.amsf-card-success {
+    background-color: #F0FDF4;
+    border-color: #86EFAC;
+    color: #166534;
+}
+
+.amsf-eligible-msg {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.9;
+    margin: 0;
+    color: #166534;
+}
+
+.amsf-card-warning {
+    background-color: #FDF2F2;
+    border-color: #F87171;
+    color: #7F1D1D;
+}
+
+.amsf-reasons-list {
+    margin: 0;
+    padding-right: 20px;
+    color: #7F1D1D;
+}
+
+.amsf-reasons-list li {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.85;
+    margin-bottom: 10px;
+    color: #7F1D1D;
+}
+
+.amsf-reasons-list li:last-child {
+    margin-bottom: 0;
+}
+
+.amsf-result-safety-notice {
+    margin-top: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2D3748;
+    line-height: 1.8;
+}
+
+@media (max-width: 480px) {
+    .amsf-form {
+        padding: 20px 16px;
+    }
+    .amsf-navigation-bar {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+}

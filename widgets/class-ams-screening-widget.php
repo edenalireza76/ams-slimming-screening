@@ -1,0 +1,373 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+use Elementor\Widget_Base;
+use Elementor\Controls_Manager;
+use Elementor\Group_Control_Typography;
+use Elementor\Group_Control_Border;
+use Elementor\Group_Control_Box_Shadow;
+use Elementor\Group_Control_Background;
+
+class AMS_Screening_Widget extends Widget_Base {
+
+    public function get_name() {
+        return 'ams_screening_form';
+    }
+
+    public function get_title() {
+        return 'فرم غربالگری آمپول لاغری';
+    }
+
+    public function get_icon() {
+        return 'eicon-form-horizontal';
+    }
+
+    public function get_categories() {
+        return array('ams-screening-category');
+    }
+
+    public function get_script_depends() {
+        return array('amsf-frontend-js');
+    }
+
+    public function get_style_depends() {
+        return array('amsf-frontend-css');
+    }
+
+    protected function register_controls() {
+
+        // تب Content: فقط و فقط پیش‌نمایش در ادیتور
+        $this->start_controls_section(
+            'section_editor_preview',
+            array(
+                'label' => 'پیش‌نمایش در ادیتور',
+                'tab'   => Controls_Manager::TAB_CONTENT,
+            )
+        );
+
+        $this->add_control(
+            'editor_preview_state',
+            array(
+                'label'   => 'وضعیت نمایش در ادیتور',
+                'type'    => Controls_Manager::SELECT,
+                'default' => 'step_1',
+                'options' => array(
+                    'step_1'          => 'مرحله ۱: اطلاعات فردی',
+                    'step_2'          => 'مرحله ۲: قد و وزن و سابقه',
+                    'step_3'          => 'مرحله ۳: بیماری‌های فعلی و داروها',
+                    'step_4'          => 'مرحله ۴: بارداری و شیردهی (بانوان)',
+                    'step_5'          => 'مرحله ۵: سوابق پزشکی تخصصی',
+                    'step_6'          => 'مرحله ۶: وضعیت روانی و رفتار غذایی',
+                    'result_eligible' => 'نتیجه: واجد شرایط',
+                    'result_rejected' => 'نتیجه: واجد نیست (کادر قرمز)',
+                    'show_errors'     => 'نمایش خطاهای اعتبارسنجی',
+                ),
+                'description' => 'این کنترل فقط در محیط ادیتور المنتور برای استایل‌دهی اثر دارد و در سایت زنده نادیده گرفته می‌شود.',
+            )
+        );
+
+        $this->end_controls_section();
+
+        // ==========================================
+        // تب Style
+        // ==========================================
+
+        // ۱. تنظیمات کلی
+        $this->start_controls_section(
+            'section_style_general',
+            array(
+                'label' => 'کلی (رنگ‌ها و فونت)',
+                'tab'   => Controls_Manager::TAB_STYLE,
+            )
+        );
+
+        $colors = array(
+            'primary_color' => array('label' => 'رنگ اصلی', 'var' => '--amsf-primary', 'default' => '#1F50AD'),
+            'accent_color'  => array('label' => 'رنگ تأکید', 'var' => '--amsf-accent', 'default' => '#FFB617'),
+            'text_color'    => array('label' => 'رنگ متن', 'var' => '--amsf-text', 'default' => '#2D3748'),
+            'bg_color'      => array('label' => 'رنگ پس‌زمینه کارت', 'var' => '--amsf-bg', 'default' => '#FFFFFF'),
+            'error_color'   => array('label' => 'رنگ خطا', 'var' => '--amsf-error', 'default' => '#D32F2F'),
+            'success_color' => array('label' => 'رنگ موفقیت', 'var' => '--amsf-success', 'default' => '#2E7D32'),
+        );
+
+        foreach ($colors as $c_key => $c_info) {
+            $this->add_control(
+                $c_key,
+                array(
+                    'label'     => $c_info['label'],
+                    'type'      => Controls_Manager::COLOR,
+                    'default'   => $c_info['default'],
+                    'selectors' => array(
+                        '{{WRAPPER}} .amsf-root' => $c_info['var'] . ': {{VALUE}};',
+                    ),
+                )
+            );
+        }
+
+        $this->add_group_control(
+            Group_Control_Typography::get_type(),
+            array(
+                'name'     => 'general_typography',
+                'label'    => 'تایپوگرافی کلی فرم',
+                'selector' => '{{WRAPPER}} .amsf-root',
+            )
+        );
+
+        $this->end_controls_section();
+
+        // ۲. کارت فرم
+        $this->start_controls_section(
+            'section_style_card',
+            array(
+                'label' => 'کارت فرم',
+                'tab'   => Controls_Manager::TAB_STYLE,
+            )
+        );
+
+        $this->add_responsive_control(
+            'card_max_width',
+            array(
+                'label'      => 'حداکثر عرض',
+                'type'       => Controls_Manager::SLIDER,
+                'size_units' => array('px', '%'),
+                'range'      => array('px' => array('min' => 320, 'max' => 1200)),
+                'default'    => array('unit' => 'px', 'size' => 720),
+                'selectors'  => array('{{WRAPPER}} .amsf-form' => 'max-width: {{SIZE}}{{UNIT}}; margin-left: auto; margin-right: auto;'),
+            )
+        );
+
+        $this->add_group_control(
+            Group_Control_Background::get_type(),
+            array(
+                'name'     => 'card_background',
+                'selector' => '{{WRAPPER}} .amsf-form',
+            )
+        );
+
+        $this->add_group_control(
+            Group_Control_Border::get_type(),
+            array(
+                'name'     => 'card_border',
+                'selector' => '{{WRAPPER}} .amsf-form',
+            )
+        );
+
+        $this->add_responsive_control(
+            'card_radius',
+            array(
+                'label'      => 'گردی گوشه‌ها (Radius)',
+                'type'       => Controls_Manager::DIMENSIONS,
+                'size_units' => array('px', '%'),
+                'selectors'  => array('{{WRAPPER}} .amsf-form' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'),
+            )
+        );
+
+        $this->add_group_control(
+            Group_Control_Box_Shadow::get_type(),
+            array(
+                'name'     => 'card_shadow',
+                'selector' => '{{WRAPPER}} .amsf-form',
+            )
+        );
+
+        $this->add_responsive_control(
+            'card_padding',
+            array(
+                'label'      => 'Padding داخلی',
+                'type'       => Controls_Manager::DIMENSIONS,
+                'size_units' => array('px', 'em'),
+                'selectors'  => array('{{WRAPPER}} .amsf-form' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'),
+            )
+        );
+
+        $this->end_controls_section();
+
+        // ۳. نوار پیشرفت
+        $this->start_controls_section(
+            'section_style_progress',
+            array(
+                'label' => 'نوار پیشرفت',
+                'tab'   => Controls_Manager::TAB_STYLE,
+            )
+        );
+
+        $this->add_responsive_control(
+            'progress_height',
+            array(
+                'label'     => 'ارتفاع نوار پیشرفت',
+                'type'      => Controls_Manager::SLIDER,
+                'range'     => array('px' => array('min' => 4, 'max' => 24)),
+                'selectors' => array('{{WRAPPER}} .amsf-progress-track' => 'height: {{SIZE}}px;'),
+            )
+        );
+
+        $this->add_control(
+            'progress_bg_color',
+            array(
+                'label'     => 'رنگ پس‌زمینه نوار',
+                'type'      => Controls_Manager::COLOR,
+                'selectors' => array('{{WRAPPER}} .amsf-progress-track' => 'background-color: {{VALUE}};'),
+            )
+        );
+
+        $this->add_control(
+            'progress_fill_color',
+            array(
+                'label'     => 'رنگ پرشونده نوار',
+                'type'      => Controls_Manager::COLOR,
+                'selectors' => array('{{WRAPPER}} .amsf-progress-bar' => 'background-color: {{VALUE}};'),
+            )
+        );
+
+        $this->end_controls_section();
+
+        // ۴. فیلدهای ورودی
+        $this->start_controls_section(
+            'section_style_inputs',
+            array(
+                'label' => 'فیلدهای ورودی و کارت‌های انتخاب',
+                'tab'   => Controls_Manager::TAB_STYLE,
+            )
+        );
+
+        $this->add_responsive_control(
+            'choice_grid_cols',
+            array(
+                'label'     => 'تعداد ستون چک‌باکس‌ها',
+                'type'      => Controls_Manager::SELECT,
+                'default'   => '2',
+                'options'   => array('1' => '۱ ستون', '2' => '۲ ستون', '3' => '۳ ستون'),
+                'selectors' => array('{{WRAPPER}} .amsf-checkbox-group' => 'grid-template-columns: repeat({{VALUE}}, 1fr);'),
+            )
+        );
+
+        $this->add_control(
+            'input_border_color',
+            array(
+                'label'     => 'رنگ کادر فیلدها',
+                'type'      => Controls_Manager::COLOR,
+                'selectors' => array(
+                    '{{WRAPPER}} .amsf-input, {{WRAPPER}} .amsf-textarea, {{WRAPPER}} .amsf-checkbox-card, {{WRAPPER}} .amsf-radio-card, {{WRAPPER}} .amsf-toggle-text' => 'border-color: {{VALUE}};',
+                ),
+            )
+        );
+
+        $this->end_controls_section();
+
+        // ۵. دکمه‌ها (با حلقه)
+        $btn_types = array(
+            'next'   => 'دکمه بعدی',
+            'prev'   => 'دکمه قبلی',
+            'submit' => 'دکمه ارسال',
+        );
+
+        foreach ($btn_types as $b_key => $b_label) {
+            $this->start_controls_section(
+                'section_style_btn_' . $b_key,
+                array(
+                    'label' => $b_label,
+                    'tab'   => Controls_Manager::TAB_STYLE,
+                )
+            );
+
+            $sel = '{{WRAPPER}} .amsf-btn-' . $b_key;
+
+            $this->add_control(
+                'btn_' . $b_key . '_color',
+                array(
+                    'label'     => 'رنگ متن',
+                    'type'      => Controls_Manager::COLOR,
+                    'selectors' => array($sel => 'color: {{VALUE}};'),
+                )
+            );
+
+            $this->add_control(
+                'btn_' . $b_key . '_bg',
+                array(
+                    'label'     => 'رنگ پس‌زمینه',
+                    'type'      => Controls_Manager::COLOR,
+                    'selectors' => array($sel => 'background-color: {{VALUE}};'),
+                )
+            );
+
+            $this->add_responsive_control(
+                'btn_' . $b_key . '_radius',
+                array(
+                    'label'      => 'گردی گوشه‌ها',
+                    'type'       => Controls_Manager::DIMENSIONS,
+                    'size_units' => array('px', '%'),
+                    'selectors'  => array($sel => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'),
+                )
+            );
+
+            $this->end_controls_section();
+        }
+
+        // ۶. صفحه نتیجه: واجد شرایط و واجد نیست
+        $this->start_controls_section(
+            'section_style_results',
+            array(
+                'label' => 'صفحه نتیجه (واجد / عدم تأیید)',
+                'tab'   => Controls_Manager::TAB_STYLE,
+            )
+        );
+
+        $this->add_control(
+            'eligible_box_bg',
+            array(
+                'label'     => 'پس‌زمینه کادر واجد شرایط',
+                'type'      => Controls_Manager::COLOR,
+                'default'   => '#F0FDF4',
+                'selectors' => array('{{WRAPPER}} .amsf-card-success' => 'background-color: {{VALUE}};'),
+            )
+        );
+
+        $this->add_control(
+            'eligible_text_color',
+            array(
+                'label'     => 'رنگ متن واجد شرایط',
+                'type'      => Controls_Manager::COLOR,
+                'default'   => '#166534',
+                'selectors' => array('{{WRAPPER}} .amsf-eligible-msg' => 'color: {{VALUE}};'),
+            )
+        );
+
+        $this->add_control(
+            'rejected_box_bg',
+            array(
+                'label'       => 'پس‌زمینه کادر رد (قرمز کمرنگ)',
+                'type'        => Controls_Manager::COLOR,
+                'default'     => '#FDF2F2',
+                'description' => 'هشدار: کنتراست رنگ متن و پس‌زمینه باید حداقل ۴٫۵ به ۱ بماند.',
+                'selectors'   => array('{{WRAPPER}} .amsf-card-warning' => 'background-color: {{VALUE}};'),
+            )
+        );
+
+        $this->add_control(
+            'rejected_text_color',
+            array(
+                'label'       => 'رنگ متن دلایل رد (تیره)',
+                'type'        => Controls_Manager::COLOR,
+                'default'     => '#7F1D1D',
+                'description' => 'برای حفظ خوانایی و کنتراست حداقل ۴٫۵ به ۱ از رنگ تیره استفاده کنید.',
+                'selectors'   => array('{{WRAPPER}} .amsf-card-warning, {{WRAPPER}} .amsf-reasons-list li' => 'color: {{VALUE}};'),
+            )
+        );
+
+        $this->end_controls_section();
+    }
+
+    protected function render() {
+        $settings = $this->get_settings_for_display();
+        $is_editor = \Elementor\Plugin::$instance->editor->is_edit_mode();
+        $preview_state = $is_editor ? ($settings['editor_preview_state'] ?? 'step_1') : 'none';
+        $instance_id = 'amsf-el-' . $this->get_id();
+        ?>
+        <div class="amsf-root" id="<?php echo esc_attr($instance_id); ?>" data-editor-preview="<?php echo esc_attr($preview_state); ?>">
+            <?php AMSF_Default_Settings::render_form_html($instance_id, $is_editor); ?>
+        </div>
+        <?php
+    }
+}
