@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 
 final class AMSF_Default_Settings {
 
-    public static function get_fields_schema() {
+    public static function get_base_fields_schema() {
         return array(
             1  => array(
                 'id' => 'full_name', 'step' => 1, 'type' => 'text', 'required' => true,
@@ -138,7 +138,7 @@ final class AMSF_Default_Settings {
         );
     }
 
-    public static function get_steps_meta() {
+    public static function get_base_steps_meta() {
         return array(
             1 => array('title' => 'اطلاعات فردی', 'desc' => 'مشخصات پایه و اطلاعات تماس خود را وارد کنید.'),
             2 => array('title' => 'مشخصات بدنی و سابقه کاهش وزن', 'desc' => 'قد، وزن و روش‌های قبلی کاهش وزن را مشخص کنید.'),
@@ -149,9 +149,115 @@ final class AMSF_Default_Settings {
         );
     }
 
-    public static function render_form_html($instance_id, $preview_mode = false) {
-        $fields = self::get_fields_schema();
-        $steps  = self::get_steps_meta();
+    public static function get_fields_schema($custom_overrides = null) {
+        $base_fields = self::get_base_fields_schema();
+        if ($custom_overrides === null) {
+            $custom_overrides = get_option('amsf_custom_fields_settings', array());
+        }
+
+        if (!empty($custom_overrides) && is_array($custom_overrides)) {
+            foreach ($base_fields as $num => &$field) {
+                $fid = $field['id'];
+                if (isset($custom_overrides[$fid])) {
+                    if (isset($custom_overrides[$fid]['label']) && trim($custom_overrides[$fid]['label']) !== '') {
+                        $field['label'] = $custom_overrides[$fid]['label'];
+                    }
+                    if (isset($custom_overrides[$fid]['placeholder']) && array_key_exists('placeholder', $field)) {
+                        $field['placeholder'] = $custom_overrides[$fid]['placeholder'];
+                    }
+                    if (isset($custom_overrides[$fid]['required'])) {
+                        $field['required'] = (bool) $custom_overrides[$fid]['required'];
+                    }
+                    if (!empty($field['options']) && !empty($custom_overrides[$fid]['options']) && is_array($custom_overrides[$fid]['options'])) {
+                        foreach ($field['options'] as $opt_key => $opt_label) {
+                            if (isset($custom_overrides[$fid]['options'][$opt_key]) && trim($custom_overrides[$fid]['options'][$opt_key]) !== '') {
+                                $field['options'][$opt_key] = $custom_overrides[$fid]['options'][$opt_key];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $base_fields;
+    }
+
+    public static function get_steps_meta($custom_steps = null) {
+        $base_steps = self::get_base_steps_meta();
+        if ($custom_steps === null) {
+            $custom_steps = get_option('amsf_custom_steps_settings', array());
+        }
+
+        if (!empty($custom_steps) && is_array($custom_steps)) {
+            foreach ($base_steps as $s_num => &$s_info) {
+                if (!empty($custom_steps[$s_num]['title'])) {
+                    $s_info['title'] = $custom_steps[$s_num]['title'];
+                }
+                if (isset($custom_steps[$s_num]['desc'])) {
+                    $s_info['desc'] = $custom_steps[$s_num]['desc'];
+                }
+            }
+        }
+
+        return $base_steps;
+    }
+
+    // استخراج تنظیمات فیلدها از کنترل‌های ویجت المنتور
+    public static function extract_widget_overrides(array $settings) {
+        $base_fields = self::get_base_fields_schema();
+        $base_steps  = self::get_base_steps_meta();
+
+        $fields_ovr = array();
+        foreach ($base_fields as $num => $field) {
+            $fid = $field['id'];
+            $item = array(
+                'label'       => isset($settings['field_' . $fid . '_label']) ? sanitize_text_field($settings['field_' . $fid . '_label']) : $field['label'],
+                'placeholder' => isset($settings['field_' . $fid . '_placeholder']) ? sanitize_text_field($settings['field_' . $fid . '_placeholder']) : ($field['placeholder'] ?? ''),
+                'required'    => isset($settings['field_' . $fid . '_required']) ? ($settings['field_' . $fid . '_required'] === 'yes') : !empty($field['required']),
+            );
+
+            if (!empty($field['options']) && is_array($field['options'])) {
+                $item['options'] = array();
+                foreach ($field['options'] as $opt_key => $opt_label) {
+                    $ctrl_key = 'field_' . $fid . '_opt_' . $opt_key;
+                    $item['options'][$opt_key] = isset($settings[$ctrl_key]) && trim($settings[$ctrl_key]) !== '' ? sanitize_text_field($settings[$ctrl_key]) : $opt_label;
+                }
+            }
+
+            $fields_ovr[$fid] = $item;
+        }
+
+        $steps_ovr = array();
+        foreach ($base_steps as $s_num => $s_info) {
+            $steps_ovr[$s_num] = array(
+                'title' => isset($settings['step_' . $s_num . '_title']) && trim($settings['step_' . $s_num . '_title']) !== '' ? sanitize_text_field($settings['step_' . $s_num . '_title']) : $s_info['title'],
+                'desc'  => isset($settings['step_' . $s_num . '_desc']) ? sanitize_text_field($settings['step_' . $s_num . '_desc']) : $s_info['desc'],
+            );
+        }
+
+        $buttons_ovr = array(
+            'next'   => !empty($settings['btn_next_text']) ? sanitize_text_field($settings['btn_next_text']) : 'بعدی',
+            'prev'   => !empty($settings['btn_prev_text']) ? sanitize_text_field($settings['btn_prev_text']) : 'قبلی',
+            'submit' => !empty($settings['btn_submit_text']) ? sanitize_text_field($settings['btn_submit_text']) : 'ارسال',
+        );
+
+        return array(
+            'fields'  => $fields_ovr,
+            'steps'   => $steps_ovr,
+            'buttons' => $buttons_ovr,
+        );
+    }
+
+    public static function render_form_html($instance_id, $preview_mode = false, $widget_overrides = array()) {
+        $fields_ovr = !empty($widget_overrides['fields']) ? $widget_overrides['fields'] : null;
+        $steps_ovr  = !empty($widget_overrides['steps']) ? $widget_overrides['steps'] : null;
+
+        $fields = self::get_fields_schema($fields_ovr);
+        $steps  = self::get_steps_meta($steps_ovr);
+
+        $btn_next   = $widget_overrides['buttons']['next'] ?? 'بعدی';
+        $btn_prev   = $widget_overrides['buttons']['prev'] ?? 'قبلی';
+        $btn_submit = $widget_overrides['buttons']['submit'] ?? 'ارسال';
         ?>
         <form class="amsf-form" data-instance="<?php echo esc_attr($instance_id); ?>" novalidate>
             <!-- نوار پیشرفت -->
@@ -184,7 +290,7 @@ final class AMSF_Default_Settings {
                     <div class="amsf-fields-grid">
                         <?php
                         foreach ($fields as $f_idx => $f) {
-                            if ($f['step'] !== $s_num) continue;
+                            if ((int)$f['step'] !== (int)$s_num) continue;
                             self::render_single_field($f, $instance_id);
                         }
                         ?>
@@ -194,22 +300,22 @@ final class AMSF_Default_Settings {
 
             <!-- دکمه‌های ناوبری -->
             <div class="amsf-navigation-bar">
-                <button type="button" class="amsf-btn amsf-btn-prev" style="display:none;">قبلی</button>
-                <button type="button" class="amsf-btn amsf-btn-next">بعدی</button>
+                <button type="button" class="amsf-btn amsf-btn-prev" style="display:none;"><?php echo esc_html($btn_prev); ?></button>
+                <button type="button" class="amsf-btn amsf-btn-next"><?php echo esc_html($btn_next); ?></button>
                 <button type="button" class="amsf-btn amsf-btn-submit" style="display:none;">
-                    <span class="amsf-btn-text">ارسال</span>
+                    <span class="amsf-btn-text"><?php echo esc_html($btn_submit); ?></span>
                     <span class="amsf-btn-spinner" aria-hidden="true"></span>
                 </button>
             </div>
 
-            <!-- صفحه نتیجه: واجد شرایط (فقط یک جمله بدون دکمه و لینک اضافه) -->
+            <!-- صفحه نتیجه: واجد شرایط -->
             <div class="amsf-result-screen amsf-result-eligible" style="display: none;" role="region" aria-live="polite">
                 <div class="amsf-result-card amsf-card-success">
                     <p class="amsf-eligible-msg"></p>
                 </div>
             </div>
 
-            <!-- صفحه نتیجه: واجد شرایط نیست (کادر قرمز کمرنگ با متن تیره + متن زیر کادر) -->
+            <!-- صفحه نتیجه: واجد شرایط نیست -->
             <div class="amsf-result-screen amsf-result-ineligible" style="display: none;" role="region" aria-live="polite">
                 <div class="amsf-result-card amsf-card-warning">
                     <ul class="amsf-reasons-list"></ul>
@@ -223,12 +329,14 @@ final class AMSF_Default_Settings {
     private static function render_single_field($field, $instance_id) {
         $field_id = $field['id'];
         $unique_input_id = $instance_id . '_' . $field_id;
+        $is_req = !empty($field['required']);
         $gender_attr = isset($field['gender_lock']) ? 'data-gender-lock="' . esc_attr($field['gender_lock']) . '"' : '';
+        $req_attr = 'data-required="' . ($is_req ? 'true' : 'false') . '"';
         ?>
-        <div class="amsf-field-group amsf-field-<?php echo esc_attr($field['type']); ?>" <?php echo $gender_attr; ?> data-name="<?php echo esc_attr($field_id); ?>">
+        <div class="amsf-field-group amsf-field-<?php echo esc_attr($field['type']); ?>" <?php echo $gender_attr; ?> <?php echo $req_attr; ?> data-name="<?php echo esc_attr($field_id); ?>">
             <label class="amsf-label" for="<?php echo esc_attr($unique_input_id); ?>">
                 <?php echo esc_html($field['label']); ?>
-                <?php if (!empty($field['required'])): ?>
+                <?php if ($is_req): ?>
                     <span class="amsf-req-star" aria-hidden="true">*</span>
                 <?php endif; ?>
             </label>
@@ -245,7 +353,7 @@ final class AMSF_Default_Settings {
                     <?php if (isset($field['maxlength'])) echo 'maxlength="' . esc_attr($field['maxlength']) . '"'; ?>
                     <?php if (isset($field['step_num'])) echo 'step="' . esc_attr($field['step_num']) . '"'; ?>
                     placeholder="<?php echo esc_attr($field['placeholder'] ?? ''); ?>"
-                    <?php echo !empty($field['required']) ? 'required' : ''; ?>
+                    <?php echo $is_req ? 'required' : ''; ?>
                 />
 
             <?php elseif ($field['type'] === 'textarea'): ?>
@@ -255,7 +363,7 @@ final class AMSF_Default_Settings {
                     class="amsf-textarea"
                     rows="3"
                     placeholder="<?php echo esc_attr($field['placeholder'] ?? ''); ?>"
-                    <?php echo !empty($field['required']) ? 'required' : ''; ?>
+                    <?php echo $is_req ? 'required' : ''; ?>
                 ></textarea>
 
             <?php elseif ($field['type'] === 'radio'): ?>
@@ -270,7 +378,7 @@ final class AMSF_Default_Settings {
                                 id="<?php echo esc_attr($opt_id); ?>" 
                                 value="<?php echo esc_attr($opt_val); ?>"
                                 class="amsf-radio-input"
-                                <?php echo !empty($field['required']) ? 'required' : ''; ?>
+                                <?php echo $is_req ? 'required' : ''; ?>
                             />
                             <span class="amsf-radio-label"><?php echo esc_html($opt_label); ?></span>
                         </label>
@@ -301,11 +409,11 @@ final class AMSF_Default_Settings {
             ?>
                 <div class="amsf-toggle-group" role="radiogroup">
                     <label class="amsf-toggle-btn amsf-toggle-yes" for="<?php echo esc_attr($yes_id); ?>">
-                        <input type="radio" name="<?php echo esc_attr($field_id); ?>" id="<?php echo esc_attr($yes_id); ?>" value="yes" class="amsf-toggle-input" <?php echo !empty($field['required']) ? 'required' : ''; ?>>
+                        <input type="radio" name="<?php echo esc_attr($field_id); ?>" id="<?php echo esc_attr($yes_id); ?>" value="yes" class="amsf-toggle-input" <?php echo $is_req ? 'required' : ''; ?>>
                         <span class="amsf-toggle-text">بله</span>
                     </label>
                     <label class="amsf-toggle-btn amsf-toggle-no" for="<?php echo esc_attr($no_id); ?>">
-                        <input type="radio" name="<?php echo esc_attr($field_id); ?>" id="<?php echo esc_attr($no_id); ?>" value="no" class="amsf-toggle-input" <?php echo !empty($field['required']) ? 'required' : ''; ?>>
+                        <input type="radio" name="<?php echo esc_attr($field_id); ?>" id="<?php echo esc_attr($no_id); ?>" value="no" class="amsf-toggle-input" <?php echo $is_req ? 'required' : ''; ?>>
                         <span class="amsf-toggle-text">خیر</span>
                     </label>
                 </div>

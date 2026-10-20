@@ -38,7 +38,9 @@ class AMS_Screening_Widget extends Widget_Base {
 
     protected function register_controls() {
 
-        // تب Content: فقط و فقط پیش‌نمایش در ادیتور
+        // ==========================================
+        // تب ۱: CONTENT (پیش‌نمایش + تنظیمات کامل مراحل و فیلدها)
+        // ==========================================
         $this->start_controls_section(
             'section_editor_preview',
             array(
@@ -64,14 +66,158 @@ class AMS_Screening_Widget extends Widget_Base {
                     'result_rejected' => 'نتیجه: واجد نیست (کادر قرمز)',
                     'show_errors'     => 'نمایش خطاهای اعتبارسنجی',
                 ),
-                'description' => 'این کنترل فقط در محیط ادیتور المنتور برای استایل‌دهی اثر دارد و در سایت زنده نادیده گرفته می‌شود.',
+                'description' => 'این کنترل فقط در محیط ادیتور المنتور برای مشاهده و استایل‌دهی مراحل اثر دارد.',
+            )
+        );
+
+        $this->end_controls_section();
+
+        // تولید داینامیک کنترل‌های مراحل ۱ تا ۶ و تمام ۲۱ فیلد در تب Content
+        $steps_meta  = AMSF_Default_Settings::get_base_steps_meta();
+        $base_fields = AMSF_Default_Settings::get_base_fields_schema();
+
+        foreach ($steps_meta as $step_num => $step_info) {
+            $this->start_controls_section(
+                'section_content_step_' . $step_num,
+                array(
+                    'label' => sprintf('فیلدهای مرحله %d: %s', $step_num, $step_info['title']),
+                    'tab'   => Controls_Manager::TAB_CONTENT,
+                )
+            );
+
+            $this->add_control(
+                'step_' . $step_num . '_title',
+                array(
+                    'label'       => 'عنوان مرحله ' . $step_num,
+                    'type'        => Controls_Manager::TEXT,
+                    'default'     => $step_info['title'],
+                    'label_block' => true,
+                )
+            );
+
+            $this->add_control(
+                'step_' . $step_num . '_desc',
+                array(
+                    'label'       => 'توضیح زیر عنوان مرحله ' . $step_num,
+                    'type'        => Controls_Manager::TEXT,
+                    'default'     => $step_info['desc'],
+                    'label_block' => true,
+                    'separator'   => 'after',
+                )
+            );
+
+            // فیلدهای مربوط به این مرحله
+            foreach ($base_fields as $f_num => $field) {
+                if ((int)$field['step'] !== (int)$step_num) {
+                    continue;
+                }
+
+                $fid = $field['id'];
+
+                $this->add_control(
+                    'heading_field_' . $fid,
+                    array(
+                        'label'     => sprintf('سؤال %d: %s', $f_num, $field['label']),
+                        'type'      => Controls_Manager::HEADING,
+                        'separator' => 'before',
+                    )
+                );
+
+                // ۱. متن عنوان سؤال (Label)
+                $this->add_control(
+                    'field_' . $fid . '_label',
+                    array(
+                        'label'       => 'متن سؤال (Label)',
+                        'type'        => Controls_Manager::TEXT,
+                        'default'     => $field['label'],
+                        'label_block' => true,
+                    )
+                );
+
+                // ۲. متن Placeholder (اگر فیلد متنی یا عددی است)
+                if (array_key_exists('placeholder', $field)) {
+                    $this->add_control(
+                        'field_' . $fid . '_placeholder',
+                        array(
+                            'label'       => 'متن داخل فیلد (Placeholder)',
+                            'type'        => Controls_Manager::TEXT,
+                            'default'     => $field['placeholder'],
+                            'label_block' => true,
+                        )
+                    );
+                }
+
+                // ۳. کلید ضروری / غیرضروری بودن
+                $this->add_control(
+                    'field_' . $fid . '_required',
+                    array(
+                        'label'        => 'فیلد ضروری (اجباری) باشد؟',
+                        'type'         => Controls_Manager::SWITCHER,
+                        'label_on'     => 'بله',
+                        'label_off'    => 'خیر',
+                        'return_value' => 'yes',
+                        'default'      => !empty($field['required']) ? 'yes' : '',
+                    )
+                );
+
+                // ۴. امکان تغییر متن گزینه‌ها (برای فیلدهای رادیویی و چندانتخابی)
+                if (!empty($field['options']) && is_array($field['options'])) {
+                    foreach ($field['options'] as $opt_key => $opt_label) {
+                        $this->add_control(
+                            'field_' . $fid . '_opt_' . $opt_key,
+                            array(
+                                'label'   => 'متن گزینه: ' . $opt_label,
+                                'type'    => Controls_Manager::TEXT,
+                                'default' => $opt_label,
+                            )
+                        );
+                    }
+                }
+            }
+
+            $this->end_controls_section();
+        }
+
+        // سکشن متون دکمه‌های ناوبری در تب Content
+        $this->start_controls_section(
+            'section_content_buttons',
+            array(
+                'label' => 'متن دکمه‌های فرم',
+                'tab'   => Controls_Manager::TAB_CONTENT,
+            )
+        );
+
+        $this->add_control(
+            'btn_next_text',
+            array(
+                'label'   => 'متن دکمه بعدی',
+                'type'    => Controls_Manager::TEXT,
+                'default' => 'بعدی',
+            )
+        );
+
+        $this->add_control(
+            'btn_prev_text',
+            array(
+                'label'   => 'متن دکمه قبلی',
+                'type'    => Controls_Manager::TEXT,
+                'default' => 'قبلی',
+            )
+        );
+
+        $this->add_control(
+            'btn_submit_text',
+            array(
+                'label'   => 'متن دکمه ارسال نهایی',
+                'type'    => Controls_Manager::TEXT,
+                'default' => 'ارسال',
             )
         );
 
         $this->end_controls_section();
 
         // ==========================================
-        // تب Style
+        // تب ۲: STYLE
         // ==========================================
 
         // ۱. تنظیمات کلی
@@ -256,7 +402,7 @@ class AMS_Screening_Widget extends Widget_Base {
 
         $this->end_controls_section();
 
-        // ۵. دکمه‌ها (با حلقه)
+        // ۵. دکمه‌ها
         $btn_types = array(
             'next'   => 'دکمه بعدی',
             'prev'   => 'دکمه قبلی',
@@ -364,9 +510,20 @@ class AMS_Screening_Widget extends Widget_Base {
         $is_editor = \Elementor\Plugin::$instance->editor->is_edit_mode();
         $preview_state = $is_editor ? ($settings['editor_preview_state'] ?? 'step_1') : 'none';
         $instance_id = 'amsf-el-' . $this->get_id();
+
+        // استخراج تنظیمات سفارشی فیلدها و مراحل از ویجت المنتور
+        $widget_overrides = AMSF_Default_Settings::extract_widget_overrides($settings);
+
+        // همگام‌سازی تنظیمات با گزینه سراسری تا سرور هم دقیقاً از همین وضعیت (اجباری/اختیاری و لیبل‌ها) استفاده کند
+        if (!empty($widget_overrides['fields'])) {
+            update_option('amsf_custom_fields_settings', $widget_overrides['fields']);
+        }
+        if (!empty($widget_overrides['steps'])) {
+            update_option('amsf_custom_steps_settings', $widget_overrides['steps']);
+        }
         ?>
         <div class="amsf-root" id="<?php echo esc_attr($instance_id); ?>" data-editor-preview="<?php echo esc_attr($preview_state); ?>">
-            <?php AMSF_Default_Settings::render_form_html($instance_id, $is_editor); ?>
+            <?php AMSF_Default_Settings::render_form_html($instance_id, $is_editor, $widget_overrides); ?>
         </div>
         <?php
     }

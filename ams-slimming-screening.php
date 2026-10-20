@@ -2,7 +2,7 @@
 /**
  * Plugin Name: فرم غربالگری آمپول لاغری
  * Description: پلاگین غربالگری سلامت و آمادگی دریافت آمپول لاغری (نسخه ۲۱ سوالی استاندارد) به همراه ویجت استایل‌دهی المنتور.
- * Version: 2.1.0
+ * Version: 2.1.2
  * Author: AlirezaMoghimian.ir
  * Text Domain: ams-screening
  * Domain Path: /languages
